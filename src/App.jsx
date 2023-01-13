@@ -39,6 +39,7 @@ const Search = (props) => {
 
   const handleChange = (event) => {
     console.log(event.target.value);
+    props.handleSearch(event.target.value);
     setSearchTerm(event.target.value);
   };
 
@@ -83,13 +84,23 @@ const App = () => {
       objectID: 1,
     },
   ];
-  let count = 0;
+
+  const [Stories, setStories] = React.useState(stories);
+
+  const handleSearch = (title) => {
+    let searchResult = stories.filter((story) => {
+      if (story.title.indexOf(title) !== -1) return story;
+    });
+    console.log(searchResult);
+    setStories(searchResult);
+  };
+
   return (
     <div>
       <h1>My Hacker Stories</h1>
-      <Search />
+      <Search handleSearch={handleSearch} />
       <hr />
-      <List list={stories} />
+      <List list={Stories} />
     </div>
   );
 };
