@@ -1,71 +1,44 @@
-import * as React from "react";
+import { useState, useEffect } from "react";
 
-const List = (props) => {
-  console.log("List render...");
+const List = ({ list }) => (
+  <ul>
+    {list.map((item) => (
+      <Item item={item} key={item.objectID}></Item>
+    ))}
+  </ul>
+);
 
-  const list = props.list;
-  return (
-    <>
-      <h2>This List Components</h2>
-      <ul>
-        {list.map((item) => (
-          <Item item={item} key={item.objectID}></Item>
-        ))}
-      </ul>
-    </>
-  );
-};
+const Item = ({ item }) => (
+  <li>
+    <span>
+      <a href={item.url}>{item.title}</a>
+    </span>
+    <span>{item.author}</span>
+    <span>{item.num_comments}</span>
+    <span>{item.points}</span>
+  </li>
+);
 
-const Item = (props) => {
-  console.log("Item render...");
+const Search = ({ searchTerm, onSearch }) => (
+  <>
+    <label htmlFor="search">Search: </label>
+    <input id="search" type="text" onChange={onSearch} value={searchTerm} />
+    <p>
+      Searching for <strong>{searchTerm}</strong>
+    </p>
+  </>
+);
 
-  const item = props.item;
-  return (
-    <li key={item.objectID}>
-      <span>
-        <a href={item.url}>{item.title}</a>
-      </span>
-      <span>{item.author}</span>
-      <span>{item.num_comments}</span>
-      <span>{item.points}</span>
-    </li>
-  );
-};
-
-const Search = (props) => {
-  console.log("Search render...");
-
-  const [searchTerm, setSearchTerm] = React.useState("");
-
-  const handleChange = (event) => {
-    console.log(event.target.value);
-    props.handleSearch(event.target.value);
-    setSearchTerm(event.target.value);
-  };
-
-  const handleBlur = (event) => {
-    console.log(event.target.value);
-  };
-
-  return (
-    <div>
-      <label htmlFor="search">Search: </label>
-      <input
-        id="search"
-        type="text"
-        onChange={handleChange}
-        onBlur={handleBlur}
-      />
-      <p>
-        Searching for <strong>{searchTerm}</strong>
-      </p>
-    </div>
-  );
+// custom Hook
+const useStorageState = (key, initialState) => {
+  const [value, setValue] = useState(localStorage.getItem(key) ?? initialState);
+  useEffect(() => {
+    localStorage.setItem(key, value);
+  }, [value]);
+  return [value, setValue];
 };
 
 const App = () => {
-  console.log("App render...");
-
   const stories = [
     {
       title: "React",
@@ -85,23 +58,23 @@ const App = () => {
     },
   ];
 
-  const [Stories, setStories] = React.useState(stories);
+  const [searchTerm, setSearchTerm] = useStorageState("searchTerm", "React");
 
-  const handleSearch = (title) => {
-    let searchResult = stories.filter((story) => {
-      if (story.title.indexOf(title) !== -1) return story;
-    });
-    console.log(searchResult);
-    setStories(searchResult);
+  const handleSearch = (event) => {
+    setSearchTerm(event.target.value);
   };
 
+  const searchedStories = stories.filter((story) =>
+    story.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div>
+    <>
       <h1>My Hacker Stories</h1>
-      <Search handleSearch={handleSearch} />
+      <Search onSearch={handleSearch} searchTerm={searchTerm} />
       <hr />
-      <List list={Stories} />
-    </div>
+      <List list={searchedStories} />
+    </>
   );
 };
 
