@@ -19,10 +19,24 @@ const Item = ({ item }) => (
   </li>
 );
 
-const InputWithLabel = ({ searchTerm, onSearch, id, label, type = "text" }) => (
+const InputWithLabel = ({
+  searchTerm,
+  onSearch,
+  id,
+  children,
+  type = "text",
+  isFocused = false,
+}) => (
   <>
-    <label htmlFor={id}>{label}</label>
-    <input id={id} type={type} onChange={onSearch} value={searchTerm} />
+    <label htmlFor={id}>{children}</label>
+    &nbsp;
+    <input
+      id={id}
+      type={type}
+      onChange={onSearch}
+      value={searchTerm}
+      autoFocus={isFocused}
+    />
     <p>
       Searching for <strong>{searchTerm}</strong>
     </p>
@@ -73,10 +87,12 @@ const App = () => {
       <h1>My Hacker Stories</h1>
       <InputWithLabel
         id="search"
-        label="Search: "
         onSearch={handleSearch}
         searchTerm={searchTerm}
-      />
+        isFocused
+      >
+        <strong>Search:</strong>
+      </InputWithLabel>
       <hr />
       <List list={searchedStories} />
     </>
