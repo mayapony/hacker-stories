@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useState, useEffect } from "react";
 
 const List = ({ list }) => (
@@ -26,22 +27,33 @@ const InputWithLabel = ({
   children,
   type = "text",
   isFocused = false,
-}) => (
-  <>
-    <label htmlFor={id}>{children}</label>
-    &nbsp;
-    <input
-      id={id}
-      type={type}
-      onChange={onSearch}
-      value={searchTerm}
-      autoFocus={isFocused}
-    />
-    <p>
-      Searching for <strong>{searchTerm}</strong>
-    </p>
-  </>
-);
+}) => {
+  const inputRef = useRef();
+
+  useEffect(() => {
+    if (isFocused && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isFocused]);
+
+  return (
+    <>
+      <label htmlFor={id}>{children}</label>
+      &nbsp;
+      <input
+        ref={inputRef}
+        id={id}
+        type={type}
+        onChange={onSearch}
+        value={searchTerm}
+        autoFocus={isFocused}
+      />
+      <p>
+        Searching for <strong>{searchTerm}</strong>
+      </p>
+    </>
+  );
+};
 
 // custom Hook
 const useStorageState = (key, initialState) => {
