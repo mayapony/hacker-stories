@@ -1,24 +1,33 @@
 import { useRef } from "react";
 import { useState, useEffect } from "react";
 
-const List = ({ list }) => (
+const List = ({ list, handleItemClick }) => (
   <ul>
     {list.map((item) => (
-      <Item item={item} key={item.objectID}></Item>
+      <Item
+        item={item}
+        key={item.objectID}
+        handleItemClick={handleItemClick}
+      ></Item>
     ))}
   </ul>
 );
 
-const Item = ({ item }) => (
-  <li>
-    <span>
-      <a href={item.url}>{item.title}</a>
-    </span>
-    <span>{item.author}</span>
-    <span>{item.num_comments}</span>
-    <span>{item.points}</span>
-  </li>
-);
+const Item = ({ item, handleItemClick }) => {
+  return (
+    <li>
+      <span>
+        <a href={item.url}>{item.title}</a>
+      </span>
+      <span>{item.author}</span>
+      <span>{item.num_comments}</span>
+      <span>{item.points}</span>
+      <button onClick={handleItemClick} id={item.objectID}>
+        delete
+      </button>
+    </li>
+  );
+};
 
 const InputWithLabel = ({
   searchTerm,
@@ -65,7 +74,7 @@ const useStorageState = (key, initialState) => {
 };
 
 const App = () => {
-  const stories = [
+  const initStories = [
     {
       title: "React",
       url: "https://reactjs.org/",
@@ -84,10 +93,16 @@ const App = () => {
     },
   ];
 
+  const [stories, setStories] = useState(initStories);
   const [searchTerm, setSearchTerm] = useStorageState("searchTerm", "React");
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
+  };
+
+  const handleItemClick = (event) => {
+    const id = event.target.id;
+    setStories(stories.filter((story) => story.objectID.toString() !== id));
   };
 
   const searchedStories = stories.filter((story) =>
@@ -106,7 +121,7 @@ const App = () => {
         <strong>Search:</strong>
       </InputWithLabel>
       <hr />
-      <List list={searchedStories} />
+      <List list={searchedStories} handleItemClick={handleItemClick} />
     </>
   );
 };
