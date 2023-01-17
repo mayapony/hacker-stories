@@ -1,19 +1,19 @@
 import { useRef } from "react";
 import { useState, useEffect } from "react";
 
-const List = ({ list, handleItemClick }) => (
+const List = ({ list, onRemoveStory }) => (
   <ul>
     {list.map((item) => (
       <Item
         item={item}
         key={item.objectID}
-        handleItemClick={handleItemClick}
+        onRemoveStory={onRemoveStory}
       ></Item>
     ))}
   </ul>
 );
 
-const Item = ({ item, handleItemClick }) => {
+const Item = ({ item, onRemoveStory }) => {
   return (
     <li>
       <span>
@@ -22,7 +22,16 @@ const Item = ({ item, handleItemClick }) => {
       <span>{item.author}</span>
       <span>{item.num_comments}</span>
       <span>{item.points}</span>
-      <button onClick={handleItemClick} id={item.objectID}>
+      {/* <button onClick={onRemoveStory.bind(null, item)} id={item.objectID}>
+        delete
+      </button> */}
+      <button
+        onClick={(event) => {
+          // console.log(event);
+          onRemoveStory(item);
+        }}
+        id={item.objectID}
+      >
         delete
       </button>
     </li>
@@ -74,7 +83,7 @@ const useStorageState = (key, initialState) => {
 };
 
 const App = () => {
-  const initStories = [
+  const initialStories = [
     {
       title: "React",
       url: "https://reactjs.org/",
@@ -93,35 +102,61 @@ const App = () => {
     },
   ];
 
-  const [stories, setStories] = useState(initStories);
+  const getAsyncStories = () =>
+    new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({ data: { stories: initialStories } });
+      }, 2000);
+    });
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [stories, setStories] = useState([]);
   const [searchTerm, setSearchTerm] = useStorageState("searchTerm", "React");
 
-  const handleSearch = (event) => {
+  const handleSearchStories = (event) => {
     setSearchTerm(event.target.value);
   };
 
-  const handleItemClick = (event) => {
-    const id = event.target.id;
-    setStories(stories.filter((story) => story.objectID.toString() !== id));
+  const handleRemoveStory = (item) => {
+    const newStories = stories.filter(
+      (story) => story.objectID !== item.objectID
+    );
+    setStories(newStories);
   };
 
   const searchedStories = stories.filter((story) =>
     story.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  useEffect(() => {
+    setIsLoading(true);
+    getAsyncStories()
+      .then((result) => {
+        setStories(result.data.stories);
+        setIsLoading(false);
+      })
+      .catch(() => setIsError(true));
+  }, []);
+
   return (
     <>
       <h1>My Hacker Stories</h1>
       <InputWithLabel
         id="search"
-        onSearch={handleSearch}
+        onSearch={handleSearchStories}
         searchTerm={searchTerm}
         isFocused
       >
         <strong>Search:</strong>
       </InputWithLabel>
       <hr />
-      <List list={searchedStories} handleItemClick={handleItemClick} />
+      {isError && "Something went wrong ..."}
+      {isLoading ? (
+        "Loading"
+      ) : (
+        <List list={searchedStories} onRemoveStory={handleRemoveStory} />
+      )}
     </>
   );
 };
