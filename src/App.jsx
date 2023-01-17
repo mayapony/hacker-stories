@@ -1,5 +1,45 @@
+import { useReducer } from "react";
 import { useRef } from "react";
 import { useState, useEffect } from "react";
+const SET_STORIES = "SET_STORIES";
+const REMOVE_STORY = "REMOVE_STORY";
+
+const initialStories = [
+  {
+    title: "React",
+    url: "https://reactjs.org/",
+    author: "Jordan Walke",
+    num_comments: 3,
+    points: 4,
+    objectID: 0,
+  },
+  {
+    title: "Redux",
+    url: "https://redux.js.org/",
+    author: "Dan Abramov, Andrew Clark",
+    num_comments: 2,
+    points: 5,
+    objectID: 1,
+  },
+];
+const getAsyncStories = () =>
+  new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ data: { stories: initialStories } });
+    }, 2000);
+  });
+const storiesReducer = (state, action) => {
+  switch (action.type) {
+    case SET_STORIES:
+      return action.payload;
+    case REMOVE_STORY:
+      return state.filter(
+        (story) => story.objectID !== action.payload.objectID
+      );
+    default:
+      throw new Error();
+  }
+};
 
 const List = ({ list, onRemoveStory }) => (
   <ul>
@@ -22,9 +62,6 @@ const Item = ({ item, onRemoveStory }) => {
       <span>{item.author}</span>
       <span>{item.num_comments}</span>
       <span>{item.points}</span>
-      {/* <button onClick={onRemoveStory.bind(null, item)} id={item.objectID}>
-        delete
-      </button> */}
       <button
         onClick={(event) => {
           // console.log(event);
@@ -83,35 +120,9 @@ const useStorageState = (key, initialState) => {
 };
 
 const App = () => {
-  const initialStories = [
-    {
-      title: "React",
-      url: "https://reactjs.org/",
-      author: "Jordan Walke",
-      num_comments: 3,
-      points: 4,
-      objectID: 0,
-    },
-    {
-      title: "Redux",
-      url: "https://redux.js.org/",
-      author: "Dan Abramov, Andrew Clark",
-      num_comments: 2,
-      points: 5,
-      objectID: 1,
-    },
-  ];
-
-  const getAsyncStories = () =>
-    new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ data: { stories: initialStories } });
-      }, 2000);
-    });
-
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
-  const [stories, setStories] = useState([]);
+  const [stories, dispatchStories] = useReducer(storiesReducer, []);
   const [searchTerm, setSearchTerm] = useStorageState("searchTerm", "React");
 
   const handleSearchStories = (event) => {
@@ -119,10 +130,10 @@ const App = () => {
   };
 
   const handleRemoveStory = (item) => {
-    const newStories = stories.filter(
-      (story) => story.objectID !== item.objectID
-    );
-    setStories(newStories);
+    dispatchStories({
+      type: REMOVE_STORY,
+      payload: item,
+    });
   };
 
   const searchedStories = stories.filter((story) =>
@@ -133,7 +144,10 @@ const App = () => {
     setIsLoading(true);
     getAsyncStories()
       .then((result) => {
-        setStories(result.data.stories);
+        dispatchStories({
+          type: SET_STORIES,
+          payload: result.data.stories,
+        });
         setIsLoading(false);
       })
       .catch(() => setIsError(true));
